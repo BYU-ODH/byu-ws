@@ -1,0 +1,33 @@
+* byu-ws
+
+A very light-weight Clojure library facilitating BYU web service requests. Takes care of nonce encoding and header generation for requests.
+
+** Usage
+Exposes the get-http-authorization-header function, which currently works with Nonce verification. Is aware of the URLs for the student record service and the student schedule service (though you will need appropriate credentials and privileges granted to make these work). 
+
+To get the :authorization header you want to send with your web service request, do something like the following:
+
+#+BEGIN_SRC clojure
+  (get-http-authorization-header {:api-key "your api key"
+                                  :shared-secret "your shared secret"
+                                  :key-type "API"
+                                  :encoding-type "Nonce"
+                                  :url (byu-ws.core/SERVICE-URLS :records) ; or :schedule, etc
+                                          ; url will need to be modified appropriately for the web service (schedule adds personid/yearterm for example)
+                                  :request-body "" ; blank by default
+                                  :actor some-netid ; netid of person in question
+                                  :content-type "application/json"
+                                  :http-method "GET"
+                                  :actor-in-hash true
+                                  })
+#+END_SRC
+
+** TODO Future Work
+- [ ] Get URL validation working
+- [ ] Expand URL list for more web services
+
+** License
+
+Copyright © 2016 Office of Digital Humanities, BYU
+
+Distributed under the Eclipse Public License version 1.0

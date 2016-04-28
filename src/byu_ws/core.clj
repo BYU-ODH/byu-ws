@@ -1,24 +1,21 @@
 (ns byu-ws.core
   (:require [clj-http.client :as client]
-            [ring.util.codec :as r]
             [cheshire.core :as json])
   (:import [java.net URL]
-           [org.apache.commons.codec.binary Hex]
            [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]))
-
-(defonce AUTH-URL "https://ws.byu.edu/authentication/services/rest/v1/provider/URL-Encoded-API-Key/validate")
 
 (defonce VALID-KEY-TYPES #{"API" "WsSession"})
 
 (defonce DATE-FORMAT (java.text.SimpleDateFormat. "YYYY-MM-dd HH:mm:ss"))
 
-(defonce SERVICE-URLS {:records "https://api.byu.edu/rest/v1/apikey/academic/records/studentrecord/" ;; requires "grants" credentials
-                       :schedule "https://ws.byu.edu/rest/v1.0/academic/registration/studentschedule/" ;; requires "humanities" credentials
+(defonce SERVICE-URLS {:records "https://api.byu.edu/rest/v1/apikey/academic/records/studentrecord/" 
+                       :schedule "https://ws.byu.edu/rest/v1.0/academic/registration/studentschedule/"
                        })
 
-(defn make-sha512-hmac [shared-secret item-to-encode]
-  ;; better instructions: https://byuapi.atlassian.net/wiki/display/OITCoreDeveloperResources/Web+Service+using+Nonce-Encoded+HMAC+Signed+by+an+API+Key+Tutorial
+(defn make-sha512-hmac
+  "Produce a base-64 encoded sha512 hmac, as per https://byuapi.atlassian.net/wiki/display/OITCoreDeveloperResources/Web+Service+using+Nonce-Encoded+HMAC+Signed+by+an+API+Key+Tutorial"
+  [shared-secret item-to-encode]
   (let [algorithm "HmacSHA512"
         key-spec (SecretKeySpec. (.getBytes shared-secret "UTF8") algorithm)
         mac (Mac/getInstance (.getAlgorithm key-spec))
@@ -58,7 +55,9 @@
                          :default (str request-body end-str))] ;; when no request-body]
     (make-sha512-hmac shared-secret item-to-encode )))
 
-(defn get-nonce [api-key actor]
+(defn get-nonce
+  "Retrieve the body of the nonce, which will contain a key and a value"
+  [api-key actor]
   (let [actor (if (empty? actor)
                 ""
                 (str "/" actor))
@@ -70,7 +69,8 @@
   (make-sha512-hmac shared-secret nonce-value))
 
 (defn get-http-authorization-header
-  "Get the authorization header necessary for use of some BYU web services"
+  "Get the authorization header necessary for use of some BYU web services. See
+  https://byuapi.atlassian.net/wiki/display/OITCoreDeveloperResources/Web+Service+using+Nonce-Encoded+HMAC+Signed+by+an+API+Key+Tutorial"
   [& [{:keys [api-key
               shared-secret
               key-type
@@ -82,13 +82,10 @@
               http-method
               actor-in-hash
               current-timestamp]
-       :or {api-key "Ovo1FxW0yAz7-HNbdnM9"
-            shared-secret "hziQkSgRpdZla_giFfCK4h_OT98ykZM4ZYfoERvB"
-            key-type "API"
+       :or {key-type "API"
             encoding-type "Nonce"
             url (service-urls :records)
             request-body ""
-            actor "torysa" ;; netid
             content-type "application/json" 
             http-method "GET"
             actor-in-hash true
@@ -105,23 +102,3 @@
                 (str "Nonce-Encoded-" key-type "-Key " api-key "," nonce-key "," encoded-url)))
     (throw (Exception. (str "Invalid key-type " key-type)))))
 
-
-;; (get-student-data {:service :schedule :param (str personid "/20121")}) for schedule, with the 
-(defn get-student-data [&[{:keys [service param netid]
-                           :or {service :records
-                                param "081270232" ;; TODO, for records this is personid, for schedule this is personid/yearterm
-                                netid "torysa" ;; TODO
-                                }}]]
-  (let [service-url (str (SERVICE-URLS service) param)
-        auth-header (get-http-authorization-header {:api-key "0e4KkLXo6NgilKScIjh4" ;; TODO this is the "humanities" one for the schedule
-                                                    :shared-secret "4mGgi8E1a-bGd-4rMWOgsS_2-S33i104JHHDIiYp" ;; TODO this is the "humanities" one for the schedule
-                                                    :key-type "API" ;; Unnecessary
-                                                    :encoding-type "Nonce"
-                                                    :url service-url
-                                                    :request-body ""
-                                        ; :actor "torysa" ;; TODO from CAS
-                                                    :content-type "application/json"
-                                                    :http-method "GET"
-                                                    :actor-in-hash true
-                                                    })]
-    (client/get service-url {:headers {:authorization auth-header}})))
