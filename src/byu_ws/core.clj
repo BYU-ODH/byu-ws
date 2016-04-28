@@ -45,11 +45,10 @@
         item-to-encode (cond
                          (empty? request-body) (str url end-str)
 
-                         (exception-content?) ;; split the url and insert the first and second elements
+                         (exception-content?)
                          (str (clojure.string/upper-case http-method) "\n"
                               host "\n"
                               request-uri "\n"
-                                        ;(sort-params request-body) ;; TODO sort-params? Why?
                               end-str)
                          
                          :default (str request-body end-str))] ;; when no request-body]
