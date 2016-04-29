@@ -1,6 +1,6 @@
-(defproject byu-ws "0.1.0-SNAPSHOT"
+(defproject byu-odh/byu-ws "0.1.0-SNAPSHOT"
   :description "BYU Web Service requests"
-  :url "http://developer.byu.edu"
+  :url "https://github.com/BYU-ODH/byu-ws"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
