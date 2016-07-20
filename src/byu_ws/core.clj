@@ -5,11 +5,11 @@
            [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]))
 
-(defonce VALID-KEY-TYPES #{"API" "WsSession"})
+(def VALID-KEY-TYPES #{"API" "WsSession"})
 
-(defonce DATE-FORMAT (java.text.SimpleDateFormat. "YYYY-MM-dd HH:mm:ss"))
+(def DATE-FORMAT (java.text.SimpleDateFormat. "YYYY-MM-dd HH:mm:ss"))
 
-(defonce SERVICE-URLS {:records "https://api.byu.edu/rest/v1/apikey/academic/records/studentrecord/" 
+(def SERVICE-URLS {:records "https://api.byu.edu/rest/v1/apikey/academic/records/studentrecord/" 
                        :schedule "https://ws.byu.edu/rest/v1.0/academic/registration/studentschedule/"
                        })
 
@@ -83,7 +83,7 @@
               current-timestamp]
        :or {key-type "API"
             encoding-type "Nonce"
-            url (service-urls :records)
+            url (SERVICE-URLS :records)
             request-body ""
             content-type "application/json" 
             http-method "GET"

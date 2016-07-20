@@ -23,6 +23,7 @@ To get the :authorization header you want to send with your web service request,
 #+END_SRC
 
 ** TODO Future Work
+- [ ] Allow service to be either a key (:schedule) or a string url for those service addresses that aren't encoded in. 
 - [ ] Get URL validation working
 - [ ] Expand URL list for more web services
 
