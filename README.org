@@ -3,24 +3,50 @@
 A very light-weight Clojure library facilitating BYU web service requests. Takes care of nonce encoding and header generation for requests.
 
 ** Usage
-Exposes the get-http-authorization-header function, which currently works with Nonce verification. Is aware of the URLs for the student record service and the student schedule service (though you will need appropriate credentials and privileges granted to make these work). 
 
-To get the :authorization header you want to send with your web service request, do something like the following:
+*** Nonce encoding
+ Exposes the get-http-authorization-header function, which currently works with Nonce verification. Is aware of the URLs for the student record service and the student schedule service (though you will need appropriate credentials and privileges granted to make these work). 
 
+ To get the :authorization header you want to send with your web service request, do something like the following:
+
+ #+BEGIN_SRC clojure
+   (get-http-authorization-header {:api-key "your api key"
+                                   :shared-secret "your shared secret"
+                                   :key-type "API"
+                                   :encoding-type "Nonce"
+                                   :url (byu-ws.core/SERVICE-URLS :records) ; or :schedule, etc
+                                           ; url will need to be modified appropriately for the web service (schedule adds personid/yearterm for example)
+                                   :request-body "" ; blank by default
+                                   :actor some-netid ; netid of person in question
+                                   :content-type "application/json"
+                                   :http-method "GET"
+                                   :actor-in-hash true
+                                   })
+ #+END_SRC
+
+*** Oauth2 Use
+Currently this takes you as far as receiving your oauth2 token following the workflow described at https://byuoit.atlassian.net/wiki/display/WSO2/OAuth+2.0#OAuth2.0-AuthorizationCode
+
+You can get the person data using the following function (assuming you've already made the CAS run-around to get a temporary authorization code by visiting the URL you'll get from ~(authkey-GET-url)~
 #+BEGIN_SRC clojure
-  (get-http-authorization-header {:api-key "your api key"
-                                  :shared-secret "your shared secret"
-                                  :key-type "API"
-                                  :encoding-type "Nonce"
-                                  :url (byu-ws.core/SERVICE-URLS :records) ; or :schedule, etc
-                                          ; url will need to be modified appropriately for the web service (schedule adds personid/yearterm for example)
-                                  :request-body "" ; blank by default
-                                  :actor some-netid ; netid of person in question
-                                  :content-type "application/json"
-                                  :http-method "GET"
-                                  :actor-in-hash true
-                                  })
+(defn api-user-data
+  "Already having an auth code, obtain and decrypt the user data from a token request. Takes a map as: 
+  {:client-id <STR>,
+   :client-secret <STR>,
+   :redirect-uri <STR>,
+   :authorization-code <STR>}"
+  [post-map]
+  (let [post-response (stage2-request post-map)]
+    (-> post-response
+        :body
+        json/decode
+        (get "id_token") ;; the actual JWT
+        get-jwt-body)))
 #+END_SRC
+
+
+** Changes
+- Starting prep work with BYUs new oauth2 setup
 
 ** TODO Future Work
 - [ ] Allow service to be either a key (:schedule) or a string url for those service addresses that aren't encoded in. 

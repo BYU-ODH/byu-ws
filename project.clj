@@ -1,4 +1,4 @@
-(defproject byu-odh/byu-ws "0.1.0"
+(defproject byu-odh/byu-ws "0.1.1"
   :description "BYU Web Service requests"
   :url "https://github.com/BYU-ODH/byu-ws"
   :license {:name "Eclipse Public License"
