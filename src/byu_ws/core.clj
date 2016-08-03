@@ -10,7 +10,7 @@
 (def DATE-FORMAT (java.text.SimpleDateFormat. "YYYY-MM-dd HH:mm:ss"))
 
 (def SERVICE-URLS {:records "https://api.byu.edu/rest/v1/apikey/academic/records/studentrecord/" 
-                       :schedule "https://ws.byu.edu/rest/v1.0/academic/registration/studentschedule/"
+                   :schedule "https://ws.byu.edu/rest/v1.0/academic/registration/studentschedule/"
                        })
 
 (defn make-sha512-hmac
@@ -101,3 +101,34 @@
                 (str "Nonce-Encoded-" key-type "-Key " api-key "," nonce-key "," encoded-url)))
     (throw (Exception. (str "Invalid key-type " key-type)))))
 
+
+
+;(get-student-data {:service :schedule :param (str personid "/20121")}) ;; for schedule, default for records
+(defn get-student-data [&[{:keys [service param netid]
+                           :or {service :records
+                                param "081270232" ;; TODO, for records this is personid, for schedule this is personid/yearterm
+                                netid "torysa" ;; TODO
+                                }}]]
+  (let [service-url (str (SERVICE-URLS service) param)
+        auth-header (get-http-authorization-header {:api-key
+                                                    "0e4KkLXo6NgilKScIjh4" ;; TODO this is the "humanities" one for the schedule
+                                        ;"Ovo1FxW0yAz7-HNbdnM9" ;; TODO this is the "grants" one for the records
+                                                    :shared-secret
+                                        ;"hziQkSgRpdZla_giFfCK4h_OT98ykZM4ZYfoERvB" ;; TODO this is the "grants" one for the records
+                                                    "4mGgi8E1a-bGd-4rMWOgsS_2-S33i104JHHDIiYp" ;; TODO this is the "humanities" one for the schedule
+                                                    :key-type "API" ;; Unnecessary
+                                                    :encoding-type "Nonce"
+                                                    :url service-url
+                                                    :request-body ""
+                                                    :actor netid
+                                                    :content-type "application/json"
+                                                    :http-method "GET"
+                                                    :actor-in-hash true
+                                                    })
+        reply (client/get service-url {:headers {:authorization auth-header}})]
+    (-> reply :body json/parse-string
+        first ; The whole response
+        second ; The value 
+        (get "response"))
+    ;;reply
+    ))
