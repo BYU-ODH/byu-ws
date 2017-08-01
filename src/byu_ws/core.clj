@@ -1,6 +1,7 @@
 (ns byu-ws.core
   (:require [clj-http.client :as client]
-            [cheshire.core :as json])
+            [cheshire.core :as json]
+            [byu-ws.oauth2 :as oauth2])
   (:import [java.net URL]
            [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]))
@@ -123,3 +124,9 @@
         first ; The whole response
         second ; The value 
         (get "response"))))
+
+(defn get-standard-ws [m]
+  (let [{:keys [url client-id client-secret]} m
+        token (oauth2/get-access-token m)
+        full-response (client/get url {:headers {:Accept "application/json" :Authorization (str "Bearer " token)}})]
+    (-> full-response :body json/parse-string)))

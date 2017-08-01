@@ -10,6 +10,10 @@
            [java.security Key]
            [org.apache.commons.codec.binary Base64]))
 
+;; https://developer.byu.edu/docs/consume-api/use-api/choose-grant-type/client-credentials-grant-type
+
+;; consumer-keys come from the api manager, with sandbox and prod keys for each registered app. 
+
 (def authorize-url "https://api.byu.edu/authorize")
 (def token-url "https://api.byu.edu/token")
 
@@ -32,7 +36,6 @@
                       :form-params {"grant_type" "authorization_code"
                                     "code" authorization-code
                                     "redirect_uri" redirect-uri}})))
-
 
 (defn get-jwt-body
   "A cheap extraction of a base-64 jwt body, without checking signatures."
@@ -58,3 +61,20 @@
         json/decode
         (get "id_token") ;; the actual JWT
         get-jwt-body)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; client credentials grant type (automated) ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; https://developer.byu.edu/docs/consume-api/use-api/choose-grant-type/client-credentials-grant-type
+(defn token-request
+  "Request an auth-token given the client secret credentials"
+  [client-id client-secret]
+  (let [url "https://api.byu.edu/token"]
+    (client/post url {:basic-auth [client-id client-secret]
+                      :form-params {:grant_type "client_credentials"}})))
+
+(defn get-access-token [& [{:keys [client-id client-secret]}]]
+  (-> (token-request client-id client-secret)
+      :body
+      json/decode
+      (get "access_token")))
