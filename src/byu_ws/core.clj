@@ -125,6 +125,7 @@
         second ; The value 
         (get "response"))))
 
+; This appears to be the only function used when this file is included in other projects
 (defn get-standard-ws [m]
   (let [{:keys [url client-id client-secret]} m
         token (oauth2/get-access-token m)
